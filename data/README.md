@@ -6,6 +6,6 @@ chmod u+x scriptname.sh
 ```
 To continuously generate Ad Data run: 
 ```
-./publishAdData --numberOfIterations --sleepTime
+./publishAdData --numberOfIterations --sleepTime --maxBudget --actions
 ```
 
