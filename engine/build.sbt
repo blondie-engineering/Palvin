@@ -16,6 +16,10 @@ libraryDependencies ++= Seq (
   "org.apache.bahir" %% "spark-streaming-twitter" % "2.2.0"
 )
 
+libraryDependencies +=  "com.amazonaws" % "aws-java-sdk" % "1.11.458"
+
+libraryDependencies +=  "com.amazonaws" % "aws-java-sdk-dynamodb" % "1.11.163"
+
 // https://mvnrepository.com/artifact/org.apache.spark/spark-streaming-kafka
 libraryDependencies += "org.apache.spark" %% "spark-streaming-kafka" % "1.6.3"
 // https://mvnrepository.com/artifact/org.apache.spark/spark-streaming-kinesis-asl
