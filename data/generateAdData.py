@@ -1,8 +1,15 @@
 import random
+import sys
 
 COMPANIES = ['Coca-Cola', 'AdForm', 'PwC', 'Deloitte', 'Google']
 MAX_BUDGET = 10
 ACTIONS = 1000
+
+if(len(sys.argv) < 3):
+	print('Insufficient number of arguments, setting default values...')
+else:
+	MAX_BUDGET = sys.argv[1]
+	ACTIONS = sys.argv[2]
 
 f = open("transactions.txt", "w")
 for i in range(ACTIONS):
