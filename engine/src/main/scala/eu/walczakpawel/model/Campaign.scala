@@ -1,5 +1,5 @@
 package eu.walczakpawel.model
 
-case class Campaign(company: String, amount: Int, date: String) {
+case class Campaign(company: String, amount: Int) {
 
 }

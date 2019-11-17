@@ -1,6 +1,7 @@
 package eu.walczakpawel.db
 
 import java.util
+import java.util.Calendar
 
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
@@ -62,14 +63,16 @@ class Connector {
     }
   }
 
-  def loadCampaigns(c: Campaign): Unit = {
+  def loadCampaigns(campaigns: List[Campaign]): Unit = {
     val dynamoDB = createConnection()
     val table = dynamoDB.getTable("Campaigns")
-
+    val transaction_date = Calendar.getInstance().getTime().toString
 
     try {
-        table.putItem(new Item().withPrimaryKey("company", c.company, "transaction_date", c.date).withNumber("amount", c.amount))
-        System.out.println("PutItem succeeded: " + c.company + " " + c.date)
+        campaigns.foreach(c => {
+          table.putItem(new Item().withPrimaryKey("company", c.company, "transaction_date", transaction_date).withNumber("amount", c.amount))
+          System.out.println("PutItem succeeded: " + c.company + " " + transaction_date)
+        })
     } catch {
       case e: Exception =>
         System.err.println(e.getMessage)
@@ -209,8 +212,8 @@ class Connector {
     val scanSpec = new ScanSpec().withProjectionExpression("amount, company, transaction_date")
                       .withFilterExpression("#am between :start_am and :end_am")
                       .withNameMap(new NameMap().`with`("#am", "amount"))
-                      .withValueMap(new ValueMap().withNumber(":start_am", 1)
-                      .withNumber(":end_am", 100))
+                      .withValueMap(new ValueMap().withNumber(":start_am", 10)
+                      .withNumber(":end_am", 1000000))
 
     try {
       val items = table.scan(scanSpec)

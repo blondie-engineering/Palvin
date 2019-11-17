@@ -20,10 +20,12 @@ class DataProcessor {
       ssc, kafkaParams, topics)
       .map(_._2)
       .map(_.split(" "))
-        .map(l => (l(0), l(1)))
-        .mapValues((_, calendar.getTime().toString))
+        .map(l => (l(0), l(1).toInt))
+        .foreachRDD(c => {
+          val campaigns = c.collect().toList.groupBy(_._1).mapValues(v => v.map(_._2).sum).map(cp => Campaign(cp._1, cp._2)).toList
 
-    lines.map(l => new Campaign(l._1, l._2._1.toInt, l._2._2)).foreachRDD(c => dbConnector.loadCampaigns(c.collect().head))
+          if(!c.isEmpty()) dbConnector.loadCampaigns(campaigns)
+        })
 
     ssc.start()
     ssc.awaitTermination()
