@@ -4,6 +4,7 @@ import java.util
 import java.util.Calendar
 
 import com.amazonaws.client.builder.AwsClientBuilder
+import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.dynamodbv2.document.internal.IteratorSupport
 import com.amazonaws.services.dynamodbv2.document.spec._
@@ -12,14 +13,19 @@ import com.amazonaws.services.dynamodbv2.document._
 import com.amazonaws.services.dynamodbv2.model._
 import eu.walczakpawel.model.Campaign
 
-class Connector {
+object Connector {
 
 
-  val client: DynamoDB = new DynamoDB(
-    AmazonDynamoDBClientBuilder.standard()
-      .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "us-west-2"))
-      .build()
-  )
+  val client: DynamoDB = sys.env("IS_LOCAL") match {
+    case "true" => new DynamoDB(
+      AmazonDynamoDBClientBuilder.standard()
+        .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration("http://localhost:8000", "us-west-2"))
+        .build())
+    case _ => new DynamoDB(AmazonDynamoDBClientBuilder.standard()
+      .withRegion(Regions.EU_WEST_1)
+      .build())
+  }
+
 
   private def createConnection(): DynamoDB = {
     return this.client
@@ -51,14 +57,14 @@ class Connector {
     val dynamoDB = createConnection()
     val table = dynamoDB.getTable("Campaigns")
     val company = "Coca-Cola"
-    val transaction_date = "Peaky Blinders"
+    val transaction_date = "Thu Nov 21 19:57:34 CET 2019"
 
     try {
       table.putItem(new Item().withPrimaryKey("company", company, "transaction_date", transaction_date).withString("description", "Super campaign"))
       System.out.println("PutItem succeeded: " + company + " " + transaction_date)
     } catch {
       case e: Exception =>
-        System.err.println("Unable to add movie: " + company + " " + transaction_date)
+        System.err.println("Unable to add campaign: " + company + " " + transaction_date)
         System.err.println(e.getMessage)
     }
   }
@@ -82,11 +88,11 @@ class Connector {
   def readData(): Unit = {
 
     val dynamoDB = createConnection()
-    val table = dynamoDB.getTable("Movies")
+    val table = dynamoDB.getTable("Campaigns")
     val company = "Coca-Cola"
-    val date = "Peaky Blinders"
+    val transaction_date = "Thu Nov 21 19:57:34 CET 2019"
 
-    val spec = new GetItemSpec().withPrimaryKey("company", company, "date", date)
+    val spec = new GetItemSpec().withPrimaryKey("company", company, "transaction_date", transaction_date)
 
     try {
       System.out.println("Attempting to read the item...")
@@ -94,7 +100,7 @@ class Connector {
       System.out.println("GetItem succeeded: " + outcome)
     } catch {
       case e: Exception =>
-        System.err.println("Unable to read item: " + company + " " + date)
+        System.err.println("Unable to read item: " + company + " " + transaction_date)
         System.err.println(e.getMessage)
     }
   }
@@ -102,9 +108,9 @@ class Connector {
   def updateData(): Unit = {
 
     val dynamoDB = createConnection()
-    val table = dynamoDB.getTable("Movies")
+    val table = dynamoDB.getTable("Campaigns")
     val company = "Coca-Cola"
-    val transaction_date = "Peaky Blinders"
+    val transaction_date = "Thu Nov 21 19:57:34 CET 2019"
 
     val updateItemSpec = new UpdateItemSpec().withPrimaryKey("company", company, "transaction_date", transaction_date)
       .withUpdateExpression("set amount = :r")
@@ -127,7 +133,7 @@ class Connector {
     val dynamoDB = createConnection()
     val table = dynamoDB.getTable("Campaigns")
     val company = "Coca-Cola"
-    val transaction_date = "Peaky Blinders"
+    val transaction_date = "Thu Nov 21 19:57:34 CET 2019"
 
     val deleteItemSpec = new DeleteItemSpec().withPrimaryKey(new PrimaryKey("company", company, "transaction_date", transaction_date)).withConditionExpression("company = :val").withValueMap(new ValueMap().withString(":val", "Coca-Cola"))
 
@@ -138,69 +144,6 @@ class Connector {
     } catch {
       case e: Exception =>
         System.err.println("Unable to delete item: " + company + " " + transaction_date)
-        System.err.println(e.getMessage)
-    }
-  }
-
-  def queryData(): Unit = {
-    val dynamoDB = createConnection()
-
-    val table = dynamoDB.getTable("Campaigns");
-    val company = "Coca-Cola"
-    val transaction_date = "Peaky Blinders"
-
-    val nameMap = new util.HashMap[String, String]();
-    nameMap.put("#yr", "year");
-
-    val valueMap = new util.HashMap[String, Object]();
-    valueMap.put(":yyyy", new Integer(1985));
-
-    val querySpec = new QuerySpec().withKeyConditionExpression("#yr = :yyyy").withNameMap(nameMap)
-      .withValueMap(valueMap);
-
-
-    try {
-      System.out.println("Campaigns from 1985");
-      val items: ItemCollection[QueryOutcome] = table.query(querySpec);
-      var iterator: IteratorSupport[Item, QueryOutcome] = null;
-      var item: Item = null;
-
-      iterator = items.iterator();
-      while (iterator.hasNext()) {
-        item = iterator.next();
-        System.out.println(item.getNumber("year") + ": " + item.getString("title"));
-      }
-
-    } catch {
-      case e: Exception =>
-        System.err.println("Unable to query item: " + company + " " + transaction_date)
-        System.err.println(e.getMessage)
-    }
-
-    valueMap.put(":yyyy", new Integer(1992));
-    valueMap.put(":letter1", "A");
-    valueMap.put(":letter2", "L");
-
-    querySpec.withProjectionExpression("#yr, title, info.genres, info.actors[0]")
-      .withKeyConditionExpression("#yr = :yyyy and title between :letter1 and :letter2").withNameMap(nameMap)
-      .withValueMap(valueMap);
-
-    try {
-      System.out.println("Movies from 1992 - titles A-L, with genres and lead actor");
-      var items: ItemCollection[QueryOutcome] = table.query(querySpec);
-      var iterator: IteratorSupport[Item, QueryOutcome] = null;
-      var item: Item = null;
-      items = table.query(querySpec);
-
-      iterator = items.iterator();
-      while (iterator.hasNext()) {
-        item = iterator.next();
-        System.out.println(item.getNumber("year") + ": " + item.getString("title") + " " + item.getMap("info"));
-      }
-
-    } catch {
-      case e: Exception =>
-        System.err.println("Unable to query item: " + company + " " + transaction_date)
         System.err.println(e.getMessage)
     }
   }
