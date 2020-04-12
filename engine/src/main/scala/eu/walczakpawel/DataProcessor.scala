@@ -6,6 +6,7 @@ import java.util.Calendar
 
 import eu.walczakpawel.db.Connector
 import eu.walczakpawel.model.Campaign
+import eu.walczakpawel.qldb.putTransaction
 
 object DataProcessor {
 
@@ -23,7 +24,10 @@ object DataProcessor {
         .foreachRDD(c => {
           val campaigns = c.collect().toList.groupBy(_._1).mapValues(v => v.map(_._2).sum).map(cp => Campaign(cp._1, cp._2)).toList
 
-          if(!c.isEmpty()) Connector.loadCampaigns(campaigns)
+          if(!c.isEmpty()) {
+            putTransaction(campaigns.head.company, campaigns.head.amount)
+            Connector.loadCampaigns(campaigns)
+          }
         })
 
     ssc.start()
