@@ -29,3 +29,5 @@ libraryDependencies += "com.datastax.spark" %% "spark-cassandra-connector" % "2.
 
 // https://mvnrepository.com/artifact/org.apache.spark/spark-mllib
 libraryDependencies += "org.apache.spark" %% "spark-mllib" % "2.3.1" % "runtime"
+
+libraryDependencies += "com.lihaoyi" %% "requests" % "0.1.8"
