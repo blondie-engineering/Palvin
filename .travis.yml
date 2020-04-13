@@ -3,4 +3,4 @@ script:
   - cd engine
   - sbt ++$TRAVIS_SCALA_VERSION compile
 scala:
-  - 2.11.8
+  - 2.11.12
