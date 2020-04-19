@@ -1,7 +1,7 @@
 import random
 import sys
 
-COMPANIES = ['Coca-Cola', 'AdForm', 'PwC', 'Deloitte', 'Google']
+COMPANIES = ['Zabka', 'Biedronka']
 MAX_BUDGET = 10
 ACTIONS = 1000
 
