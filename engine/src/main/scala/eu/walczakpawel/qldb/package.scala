@@ -30,5 +30,26 @@ package object qldb {
     response.getAllHeaders.foreach(arg => println(arg))
   }
 
+  def putTransaction(campaign: Campaign): Unit = {
+    // create our object as a json string
+    try {
+      val spockAsJson = new Gson().toJson(campaign)
+
+      // add name value pairs to a post object
+      val post = new HttpPost("http://localhost:3000/qldb/insertTransaction")
+      post.setEntity(new StringEntity(spockAsJson))
+      post.setHeader("Content-type", "application/json")
+      println(spockAsJson)
+      // send the post request
+      val client = new DefaultHttpClient
+      val response = client.execute(post)
+      println("--- HEADERS ---")
+      response.getAllHeaders.foreach(arg => println(arg))
+    } catch {
+      case e: Exception => println(e)
+    }
+
+  }
+
 
 }

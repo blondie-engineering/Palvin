@@ -14,6 +14,7 @@ object DataProcessor {
 
 
   def processDataFromKafka(): Unit = {
+    try {
     val calendar = Calendar.getInstance()
     val ssc = new StreamingContext("local[*]", "AdStream", Seconds(1))
     val kafkaParams = Map("metadata.broker.list" -> sys.env("KAFKA"))
@@ -27,14 +28,21 @@ object DataProcessor {
           val campaigns = c.collect().toList.groupBy(_._1).mapValues(v => v.map(_._2).sum).map(cp => Campaign(cp._1, cp._2)).toList
 
           if(!c.isEmpty()) {
-            println(campaigns)
-            putTransaction(campaigns)
+            if(campaigns.length == 1) {
+              putTransaction(campaigns.head)
+            } else {
+              putTransaction(campaigns)
+            }
             Connector.loadCampaigns(campaigns)
           }
         })
 
-    ssc.start()
-    ssc.awaitTermination()
+      ssc.start()
+      ssc.awaitTermination()
+    } catch  {
+      case e: Exception => println(e)
+    }
+
   }
 
 }
